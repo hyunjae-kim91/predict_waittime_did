@@ -10,6 +10,8 @@ from scipy.special import inv_boxcox
 # regiminute : 초 제거하고 '분'로 변환 Ex. 10:06:38 -> 10:06:00 -> 10*60 + 6 = 606
 # regisecond : 시간을 모두 '초'로 변환 Ex.10:06:38 -> 10*3600+60*6+38=36398
 
+customer_list = [2, 4, 6]
+
 def transform_dataframe(request_body: dict) -> pd.DataFrame:
 
     date_str, time_str = request_body['regidatetime'].split(' ')
@@ -27,7 +29,7 @@ def transform_dataframe(request_body: dict) -> pd.DataFrame:
             'teamahead' : row['teamahead'],
             'customercnt' : i,
             'customergroupcnt' : i,
-    } for row in request_body['shopList'] for i in [2,4]])
+    } for row in request_body['shopList'] for i in customer_list])
     return df
 
 def transform_pred(predict: list) -> list:
@@ -38,11 +40,14 @@ def transform_pred(predict: list) -> list:
     return prediction
 
 def get_response_form(request_body: dict, prediction: list) -> pd.DataFrame:
+    list_length = len(customer_list)
+    prediction_split = [prediction[i*list_length:(i+1)*list_length] for i in range(int(len(prediction)/list_length))]
     result = pd.DataFrame([{
         'plantcode' : row['plantcode'],
-        'customercnt' : i
-    } for row in request_body['shopList'] for i in [2,4]])
-    result['waittime'] = prediction
+        'waittime2' : waittime2,
+        'waittime4' : waittime4,
+        'waittime6' : waittime6,
+    } for row, [waittime2, waittime4, waittime6] in zip(request_body['shopList'], prediction_split)])
     result = result.to_dict(orient='records')
     return result
 
