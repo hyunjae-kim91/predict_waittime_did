@@ -23,6 +23,22 @@ with open('models/lambda_value.txt', 'r') as f:
 # 고객 리스트
 customer_list = [2, 4, 6]
 
+
+def transform_pred(predict_list: list) -> list:
+    prediction = []
+    for predict in predict_list:
+        predict_boxcox = inv_boxcox(predict, lambda_value)
+        predict_minute = transform_second_to_minute(predict_boxcox)
+        predict = replace_under_ten_minutes(predict_minute)
+        prediction.append(predict)
+    return prediction
+
+def replace_under_ten_minutes(time):
+    return 10 if time <= 10 else time
+
+def transform_second_to_minute(second):
+    return int(second/60)+1
+
 def transform_plantcode(plantcode: str) -> int:
     return plantcode_mapping.get(plantcode, -1)
 
@@ -60,11 +76,6 @@ def transform_dataframe(request_body: dict) -> pd.DataFrame:
             'customergroupcnt' : i,
     } for row in request_body['shopList'] for i in customer_list])
     return df
-
-def transform_pred(predict: list) -> list:
-    # 1. 분 환산 (올림)
-    prediction = [int(inv_boxcox(pred, lambda_value)/60)+1 for pred in predict]
-    return prediction
 
 def get_response_form(request_body: dict, prediction: list) -> pd.DataFrame:
     list_length = len(customer_list)
