@@ -28,10 +28,14 @@ def transform_pred(predict_list: list) -> list:
     prediction = []
     for predict in predict_list:
         predict_boxcox = inv_boxcox(predict, lambda_value)
-        predict_minute = transform_second_to_minute(predict_boxcox)
+        predict_buffer = add_buffer(predict_boxcox)
+        predict_minute = transform_second_to_minute(predict_buffer)
         predict = replace_under_ten_minutes(predict_minute)
         prediction.append(predict)
     return prediction
+
+def add_buffer(second):
+    return second*1.1
 
 def replace_under_ten_minutes(time):
     return 10 if time <= 10 else time
